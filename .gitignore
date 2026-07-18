@@ -4,4 +4,6 @@ __pycache__/
 .DS_Store
 data/raw/*
 data/processed/*
+!data/raw/README.md
+!data/processed/README.md
 .env
