@@ -13,6 +13,8 @@ Rather than framing analytics purely around predictive accuracy metrics (e.g., A
 ├── data/
 │   ├── raw/                 # Immutable source datasets
 │   └── processed/           # Filtered cohorts with documented leakage prevention
+├── documents/
+│   ├── articles.md/         # Summary of all articles read
 ├── src/
 │   ├── __init__.py
 │   ├── models.py            # Kaplan-Meier, Cox PH, and parametric survival engines
