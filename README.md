@@ -2,6 +2,14 @@
 
 An applied data science and clinical biostatistics framework built to model time-to-event oncology data, map continuous survival curves to discrete state transition probabilities, and execute a patient-level Monte Carlo microsimulation for disease progression support.
 
+## Research Question
+ 
+**Does the choice of survival model — Cox Proportional Hazards vs. Random Survival Forest — used to parameterize a Markov microsimulation meaningfully change simulated long-term patient outcomes?**
+ 
+This project is positioned in the gap between machine learning survival model comparison and downstream decision-analytic modeling. Rather than benchmarking Cox PH against RSF on discrimination/calibration metrics alone, the goal is to test whether model choice at the survival-modeling stage propagates into materially different simulated outcomes once that model is used to parameterize a Markov microsimulation — a question with direct relevance to how decision-analytic models in health economics are built and trusted.
+ 
+Cohort: Stage III colon cancer (SEER, diagnosis years 2010–2021). Overall survival is used as the primary endpoint to avoid cause-of-death attribution ambiguity and keep the Cox PH/RSF comparison clean.
+
 ## Project Intent & Scope
 Rather than framing analytics purely around predictive accuracy metrics (e.g., AUC/ROC), this project focuses on clinical decision support by modeling lifetime health state trajectories. The architecture is deliberately separated into two key disciplines:
 1. **Biostatistical Survival Modeling:** Estimating parametric and semi-parametric time-to-event outcomes while explicitly testing mathematical invariants and checking proportional hazards assumptions.
@@ -14,7 +22,8 @@ Rather than framing analytics purely around predictive accuracy metrics (e.g., A
 │   ├── raw/                 # Immutable source datasets
 │   └── processed/           # Filtered cohorts with documented leakage prevention
 ├── documents/
-│   ├── articles.md/         # Summary of all articles read
+│   ├── articles.md         # Summary of all articles read
+│   └── seer_field_selection_rationale.md           # Document justifies every field pulled in the SEER*Stat Case Listing extract
 ├── src/
 │   ├── __init__.py
 │   ├── models.py            # Kaplan-Meier, Cox PH, and parametric survival engines
