@@ -1,14 +1,22 @@
-name: oncology-survival-env
+name: oncology-survival-sim
 channels:
   - conda-forge
   - defaults
 dependencies:
   - python=3.11
-  - pandas=2.2
-  - numpy=1.26
-  - scikit-learn=1.4
-  - matplotlib=3.8
-  - seaborn=0.13
-  - lifelines=0.28
-  - pytest=8.0
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn
+  - lifelines
+  - scikit-survival     
+  - pyyaml              
+  - matplotlib
+  - seaborn
+  - jupyterlab
+  - ipykernel
+  - pytest
+  - pytest-cov
+  - black
+  - ruff
   - pip
