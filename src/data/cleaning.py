@@ -13,6 +13,7 @@ def get_data():
     print(f"Raw data shape: {df.shape}")
     return df
 
+
 def convert_missing_values(df):
     # 1. Convert SEER-specific missing string patterns to standard NaN
     missing_patterns = ["Blank(s)", "Unknown", "999", "9999", "99"]
