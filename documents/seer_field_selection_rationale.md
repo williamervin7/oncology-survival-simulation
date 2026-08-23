@@ -28,16 +28,19 @@ This document justifies every field pulled in the SEER*Stat Case Listing extract
 
 | Diagnosis years | Staging system | Fields pulled |
 |---|---|---|
-| 2010–2017 | AJCC 7th edition | Derived AJCC Stage Group, T, N, M (7th ed) |
+| 2010–2015 | AJCC 7th edition | Derived AJCC Stage Group, T, N, M (7th ed) |
+| 2016-2017 | 7th Edition Stage Group Recode | bridges the 2016-2017 gap left after SEER transitioned from Collaborative Stage to direct TNM collection in Jan 2016 |
 | 2018–2021 | EOD 2018 (SEER's designated successor scheme for this range — a true "Derived AJCC Stage Group, 8th ed" field was not available in this database version; confirmed via a direct field-name search) | Derived EOD 2018 Stage Group Recode, T, N, M Recode |
 
-**Rationale for pulling both:** Rather than filtering on stage in SEER*Stat (which would silently drop any case with a blank/unknown value pre-export), both field families were pulled as Table columns only. This preserves every case that passed the cohort-definition filters, regardless of staging completeness, so stage harmonization and Stage III flagging happen transparently in Python where the logic is documented and version-controlled.
+**Rationale for pulling all three:** Rather than filtering on stage in SEER*Stat (which would silently drop any case with a blank/unknown value pre-export), field families were pulled as Table columns only. This preserves every case that passed the cohort-definition filters, regardless of staging completeness, so stage harmonization and Stage III flagging happen transparently in Python where the logic is documented and version-controlled.
 
-**Open question — not yet verified:** The extracted EOD 2018 Stage Group Recode field returns values (1, 2A/2B/2C, 3A/3B/3C, 4A/4B/4C, plus 0/88/99) that look like a near-direct numeric analog to AJCC stage groups (1↔I, 2↔II, 3↔III, 4↔IV). This is promising but unconfirmed. Before finalizing the Stage III harmonization logic, need to verify:
-- Whether SEER's EOD 2018 documentation explicitly states this recode is intended as an AJCC-equivalent stage grouping, or is a related-but-distinct staging concept
-- What the 0/88/99 codes represent (likely not-applicable/unknown, to be confirmed rather than assumed)
-- Whether any known discontinuities exist between 7th ed AJCC and EOD 2018 at the T/N/M component level that would affect how cleanly IIIA/IIIB/IIIC maps onto 3A/3B/3C
-If the mapping is confirmed clean, Stage III for 2018+ cases can likely be flagged directly from 3A/3B/3C. If not, a substitute approach (e.g., Regional Nodes Positive as a cross-check) will be needed and the resulting methodological deviation documented explicitly in the methods/limitations section. This verification is planned as part of the upcoming literature review week and will be updated here once resolved.
+**Resolved:** Code `88` in the T/N/M/Stage Group fields is confirmed as "not applicable" (AJCC TNM staging schema does not apply to the case), per SEER's EOD 2018 General Coding Instructions (Ruhl JL, Callaghan C, Schussler N, eds. *Extent of Disease (EOD) 2018 General Coding Instructions*. National Cancer Institute, Bethesda, MD, 2025). Verified against extracted data: all 125 rows with T=88 also show Stage Group=88 with 100% consistency, and `Behavior recode for analysis` confirms these are malignant (not in-situ) cases. These 125 rows are excluded from the analytic cohort as non-stageable under AJCC colon TNM criteria (2026-08-XX).
+
+**Resolved:** SEER's EOD 2018 training documentation confirms `Derived EOD 2018 Stage Group Recode` is explicitly derived as an AJCC 8th edition TNM Stage Group — not a related-but-distinct staging concept (source: *Introduction to the Extent of Disease (EOD) 2018 Data Collection System*, National Cancer Institute SEER Training, updated Jan 8, 2025, https://www.training.seer.cancer.gov/eod/introduction.html). This confirms the field's 1/2A-2C/3A-3C/4A-4C values map directly onto AJCC Stage I/II/III/IV, consistent with the identical 7th/8th edition colon staging tables already confirmed for this project.
+
+**Note for methods/limitations section:** the same source specifies that EOD-derived stage is a *combined* clinical/pathological stage, whereas AJCC formally distinguishes clinical (cTNM) from pathological (pTNM) staging. The harmonized `Stage` column in this project does not preserve that clinical/pathological distinction across any of its three source eras (2010–2015, 2016–2017, 2018+) — this is treated as an accepted simplification for survival modeling purposes and should be stated explicitly as a methodological choice, not left implicit.
+
+Stage III for 2018+ cases is flagged directly from the 3A/3B/3C values in `Derived EOD 2018 Stage Group Recode`. Remaining open item: confirm what codes `0` and `99` represent in this field (expected: not-applicable/unknown, following the same verification standard applied to code `88`) before finalizing the exclusion logic.
 
 | Field | Rationale |
 |---|---|

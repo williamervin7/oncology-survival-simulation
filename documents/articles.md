@@ -39,3 +39,62 @@
 - The proportional hazards assumption discussion is directly relevant to any Cox model diagnostics I implement (e.g., Schoenfeld residuals, log-log survival plots).
 - Aalen's additive model could be worth exploring if I suspect time-varying covariate effects (non-proportional hazards) in my dataset, though tooling support is limited.
 - Table structure (univariate vs multivariate HR/TR with 95% CI) is a good template for presenting my own model outputs.
+
+### AJCC Colon Cancer Staging — Stage II Definitions (Table 3)
+- **Source / Citation:** PDQ Adult Treatment Editorial Board. *Colon Cancer Treatment (PDQ®): Health Professional Version*. National Cancer Institute (US), 2002– . Table 3, "Definitions of TNM Stages IIA, IIB, and IIC" (reprinted with permission from AJCC: Colon and rectum. In: Amin MB, Edge SB, Greene FL, et al., eds. *AJCC Cancer Staging Manual*, 8th ed. New York, NY: Springer, 2017, pp 251–74). https://www.ncbi.nlm.nih.gov/books/NBK65858/table/CDR0000062687__584/
+- **Cancer Site / Population:** Colon and rectum, AJCC 8th edition TNM
+- **Event Definition ($T$):** N/A — staging reference table, not a survival study
+- **Censoring Mechanism ($C$):** N/A
+- **Tools / Statistical Methods Used:** N/A
+
+#### Key Findings & Summary
+- Stage IIA = T3, N0, M0; Stage IIB = T4a, N0, M0; Stage IIC = T4b, N0, M0.
+- Confirms Stage II is defined entirely by tumor depth (T) with no nodal involvement (N0); the T4a/T4b split is the sole distinguishing factor between IIB and IIC.
+
+#### Relevance to My Project / Code Pipeline
+- Used to validate the harmonized `Stage` column derivation and to confirm the boundary logic separating Stage II from Stage III (specifically, the T4a/T4b distinction that also matters for IIIC per Table 4).
+
+
+### AJCC Colon Cancer Staging — Stage III Definitions (Table 4)
+- **Source / Citation:** PDQ Adult Treatment Editorial Board. *Colon Cancer Treatment (PDQ®): Health Professional Version*. National Cancer Institute (US), 2002– . Table 4, "Definitions of TNM Stages IIIA, IIIB, and IIIC" (reprinted with permission from AJCC: Colon and rectum. In: Amin MB, Edge SB, Greene FL, et al., eds. *AJCC Cancer Staging Manual*, 8th ed. New York, NY: Springer, 2017, pp 251–74). https://www.ncbi.nlm.nih.gov/books/NBK65858/table/CDR0000062687__580/
+- **Cancer Site / Population:** Colon and rectum, AJCC 8th edition TNM
+- **Event Definition ($T$):** N/A — staging reference table
+- **Censoring Mechanism ($C$):** N/A
+- **Tools / Statistical Methods Used:** N/A
+
+#### Key Findings & Summary
+- Stage IIIA: T1–T2, N1/N1c, M0 or T1, N2a, M0. Stage IIIB: T3–T4a, N1/N1c, M0 or T2–T3, N2a, M0 or T1–T2, N2b, M0. Stage IIIC: T4a, N2a, M0 or T3–T4a, N2b, M0 or T4b, N1–N2, M0.
+- N sub-splits carry explicit node-count thresholds: N1a = 1 node, N1b = 2–3 nodes, N1c = 0 nodes but tumor deposits present; N2a = 4–6 nodes, N2b = 7+ nodes.
+- Confirmed via independent cross-reference (AJCC Hindgut Taskforce validation, PMC2815715) that the T/N/M-to-stage-group mapping is identical between 7th and 8th edition for colon cancer — meaning this single table is valid for both the 2010–2015 and 2018+ portions of the cohort.
+
+#### Relevance to My Project / Code Pipeline
+- This is the primary source table for Stage III cohort flagging logic. Used directly to spot-check the pre-derived `Derived AJCC Stage Group, 7th ed` and `Derived EOD 2018 Stage Group Recode` fields against their underlying T/N/M values (e.g., confirmed row 1 [T1, IIIA] and row 3 [T4b, IIIC] against this table).
+
+
+### AJCC Colon Cancer Staging — Stage IV Definitions (Table 5)
+- **Source / Citation:** PDQ Adult Treatment Editorial Board. *Colon Cancer Treatment (PDQ®): Health Professional Version*. National Cancer Institute (US), 2002– . Table 5, "Definitions of TNM Stages IVA, IVB, and IVC" (reprinted with permission from AJCC: Colon and rectum. In: Amin MB, Edge SB, Greene FL, et al., eds. *AJCC Cancer Staging Manual*, 8th ed. New York, NY: Springer, 2017, pp 251–74). https://www.ncbi.nlm.nih.gov/books/NBK65858/table/CDR0000062687__575/
+- **Cancer Site / Population:** Colon and rectum, AJCC 8th edition TNM
+- **Event Definition ($T$):** N/A — staging reference table
+- **Censoring Mechanism ($C$):** N/A
+- **Tools / Statistical Methods Used:** N/A
+
+#### Key Findings & Summary
+- Stage IV is Any T, Any N, subdivided entirely by M: IVA = M1a (metastasis to one site/organ, no peritoneal involvement), IVB = M1b (two or more sites/organs, no peritoneal involvement), IVC = M1c (peritoneal surface metastasis, alone or with other sites).
+
+#### Relevance to My Project / Code Pipeline
+- Not part of the Stage III cohort definition directly, but needed to confirm the full 0–IV boundary set so Stage III can be positively identified (not just inferred by elimination). Also clarifies that the 388 rows with a bare, non-subdivided `M1` value cannot be placed into IVA/B/C — same ambiguous-code handling issue flagged for bare T4/N1/N2 rows.
+
+
+### AJCC 6th Edition — General TX/NX/MX Definitions
+- **Source / Citation:** Massachusetts Department of Public Health (Massachusetts Cancer Registry). *Staging Data* [training reference document], based on AJCC Cancer Staging Manual, 6th ed. Springer-Verlag, New York, 2002. https://www.mass.gov/doc/staging-data-0/download
+- **Cancer Site / Population:** General TNM framework (site-agnostic)
+- **Event Definition ($T$):** N/A — coding reference document
+- **Censoring Mechanism ($C$):** N/A
+- **Tools / Statistical Methods Used:** N/A
+
+#### Key Findings & Summary
+- Defines the generic TX/T0/Tis, NX/N0, MX/M0/M1 categories used as shared boilerplate across all AJCC site chapters. TX/NX/MX = "cannot be assessed or is unknown" for the respective TNM component.
+- **Important limitation:** this source is explicitly 6th edition (2002). The N sub-splits (N1a/b/c, N2a/b) used in this project's cohort (7th/8th ed.) did not exist in 6th edition — this source is only valid for the generic TX/NX/MX "cannot be assessed" definitions, not for any site-specific or stage-grouping logic.
+
+#### Relevance to My Project / Code Pipeline
+- Confirms TX is a universal AJCC convention (not colon-specific, not a different cancer type) — resolved the question of why TX doesn't appear in the Stage III grouping table (Table 4): by definition, an unassessable T category cannot be placed in any determinable stage group.
