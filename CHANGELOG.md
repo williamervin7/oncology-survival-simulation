@@ -68,4 +68,4 @@
 - Implement `derive_stage_2010_2015()` and `derive_stage_2016_2017()` (same direct-mapping pattern as `derive_stage_2018()`).
 - Merge all three era-specific Stage columns into one harmonized `Stage` column.
 - Run coverage/count checks by diagnosis year and stage; verify Stage III counts specifically across all three eras.
-- Investigate possible C18.1 (appendix) contamination in the cohort before declaring it finalized.
+- Investigate possible C18.1 (appendix) contamination in the cohort before declaring it finalized
