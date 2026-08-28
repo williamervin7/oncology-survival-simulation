@@ -1,0 +1,39 @@
+name: Python application
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}   # needed so each step runs inside the conda env
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        environment-file: environment.yml
+        activate-environment: oncology-survival-sim
+        auto-activate-base: false
+
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=data,notebooks
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=data,notebooks
+
+    - name: Test software suite
+      run: pytest tests/software/ -v
+
+    - name: Test statistical suite
+      run: pytest tests/statistical/ -v
