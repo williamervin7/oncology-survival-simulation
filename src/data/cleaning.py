@@ -16,18 +16,23 @@ def get_data():
 
 
 def convert_missing_values(df):
-    # 1. Convert SEER-specific missing string patterns to standard NaN
+    # Convert SEER-specific missing string patterns to standard NaN
     missing_patterns = ["Blank(s)", "Unknown", "999", "9999"]
     df_clean = df.replace(missing_patterns, np.nan)
+    return df_clean
 
-    # 2. Derive binary event flag (overall survival) and coerce survival time to numeric
-    df_clean["Time"] = pd.to_numeric(df_clean["Survival months"], errors="coerce")
-    df_clean["Event"] = np.where(
-        df_clean["Vital status recode (study cutoff used)"] == "Dead",
+def event_flag(df):
+    """
+    Derive binary event flag (overall survival) and coerce survival time to numeric.
+    """
+    df["Time"] = pd.to_numeric(df["Survival months"], errors="coerce")
+    df["Event"] = np.where(
+        df["Vital status recode (study cutoff used)"] == "Dead",
         1,
-        0,    )
-    # 3. Explicitly drop rows missing core outcome metrics (Time or Event)
-    df_clean = df_clean.dropna(subset=["Time", "Event"])
+        0,
+    )
+    # Explicitly drop rows missing core outcome metrics (Time or Event)
+    df_clean = df.dropna(subset=["Time", "Event"])
     return df_clean
 
 def derive_stage_2018(df):
@@ -247,14 +252,17 @@ def clean_process():
     Run the full data cleaning and transformation process, including:
     1. Loading raw data
     2. Converting missing values
-    3. Deriving stage for 2018+ cases
-    4. Consolidating stage information
-    5. Filtering to Stage III cases
+    3. Deriving event flag and survival time
+    4. Deriving stage for 2018+ cases
+    5. Consolidating stage information
+    6. Filtering to Stage III cases
     """
     print("Running data cleaning and transformation functions...")
     df = get_data()
     df_clean = convert_missing_values(df)
     print(f"Missing values converted")
+    df_clean = event_flag(df_clean)
+    print(f"Event flag derived and survival time coerced to numeric")
     df_clean = derive_stage_2018(df_clean)
     print(f"Stage derived for 2018+ cases")
     print(df_clean.loc[df_clean['Year of diagnosis'] >= 2018, '2018+_Stage'].value_counts(dropna=False))

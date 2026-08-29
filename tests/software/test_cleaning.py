@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import pandas as pd
-from src.data.cleaning import convert_missing_values, derive_stage_2018, consolidate_stage, get_stage_III
+from src.data.cleaning import convert_missing_values, derive_stage_2018, consolidate_stage, get_stage_III, event_flag
 
 def test_convert_missing_values():
     df = pd.DataFrame({
@@ -21,6 +21,28 @@ def test_convert_missing_values():
     assert pd.isna(result["col1"].iloc[6])
     # Check that valid values remain unchanged
     assert result["col1"].iloc[7] == "valid"
+
+def test_event_flag():
+    df = pd.DataFrame({
+        "Survival months": ["12", "24", "36", "48", "60", "invalid"],
+        "Vital status recode (study cutoff used)": ["Dead", "Alive", "Dead", "Alive", "Dead", "Dead"]
+    })
+    result = event_flag(df)
+    # Check that the event flag is correctly derived
+    assert result["Event flag"].iloc[0] == 1
+    assert result["Event flag"].iloc[1] == 0
+    assert result["Event flag"].iloc[2] == 1
+    assert result["Event flag"].iloc[3] == 0
+    assert result["Event flag"].iloc[4] == 1
+    assert result["Event flag"].iloc[5] == 1
+
+    # Check that the survival months are correctly coerced to numeric, with invalid entries converted to NaN
+    assert result["Survival months"].iloc[0] == 12
+    assert result["Survival months"].iloc[1] == 24
+    assert result["Survival months"].iloc[2] == 36
+    assert result["Survival months"].iloc[3] == 48
+    assert result["Survival months"].iloc[4] == 60
+    assert result["Survival months"].iloc[5] == np.nan
 
 # after implementing the cleaning functions this test will check if the shape of the cleaned dataframe is as expected
 def test_derive_stage_2018():
