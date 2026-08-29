@@ -4,6 +4,15 @@ import os
 from pathlib import Path
 
 def get_data():
+    """Load raw SEER cohort CSV from the repository's data directory.
+
+    Resolves the root directory dynamically relative to this script's location
+    (`data/raw/raw_data.csv`) to ensure path resolution is independent of the
+    current working directory. Prints data dimensions upon successful load.
+
+    Returns:
+        pd.DataFrame: The uncleaned SEER raw dataset.
+    """
     # Anchored to this file's location, not the process's working directory.
     # src/data/cleaning.py -> parents[2] -> repo root
     BASE_DIR = Path(__file__).resolve().parents[2]
@@ -16,14 +25,37 @@ def get_data():
 
 
 def convert_missing_values(df):
+    """Standardize SEER-specific missing string placeholders to standard NaN values.
+
+    Replaces broad text patterns ("Blank(s)", "Unknown") and numeric sentinel
+    codes ("999", "9999") with `np.nan` across the DataFrame.
+
+    Args:
+        df (pd.DataFrame): Raw or partially processed DataFrame containing SEER text codes.
+
+    Returns:
+        pd.DataFrame: DataFrame with missing value placeholders replaced by `np.nan`.
+    """
     # Convert SEER-specific missing string patterns to standard NaN
     missing_patterns = ["Blank(s)", "Unknown", "999", "9999"]
     df_clean = df.replace(missing_patterns, np.nan)
     return df_clean
 
 def event_flag(df):
-    """
-    Derive binary event flag (overall survival) and coerce survival time to numeric.
+    """Derive Overall Survival (OS) event indicator and numerical follow-up duration.
+
+    Coerces 'Survival months' into continuous numeric duration (`Time`) and maps
+    'Vital status recode' to a binary event indicator (`Event`), where 1 represents
+    death ('Dead') and 0 represents right-censoring ('Alive'). Drops records with
+    unparseable survival times or unrecognized vital statuses.
+
+    Args:
+        df (pd.DataFrame): Processed DataFrame containing 'Survival months' and
+            'Vital status recode (study cutoff used)' columns.
+
+    Returns:
+        pd.DataFrame: Cohort subset with non-null numeric `Time` and binary `Event`
+            features suitable for time-to-event analysis.
     """
     df["Time"] = pd.to_numeric(df["Survival months"], errors="coerce")
 
@@ -41,11 +73,20 @@ def event_flag(df):
     return df_clean
 
 def derive_stage_2018(df):
-    """
-    Primary Stage derivation for 2018+ from SEER's pre-derived
-    'Derived EOD 2018 Stage Group Recode (2018+)' field, confirmed via SEER
-    EOD 2018 training documentation as a direct AJCC 8th edition TNM Stage
-    Group derivation (not a related-but-distinct concept).
+    """Derive AJCC 8th Edition Stage Groups for diagnosis years 2018 and later.
+
+    Maps SEER's pre-derived 'Derived EOD 2018 Stage Group Recode (2018+)' field to a
+    harmonized stage column (`2018+_Stage`). Valid stages (0, I, IIA-C, IIIA-C, IVA-C)
+    and confirmed sub-stage unknown cases (bare 'II', 'III', 'IV') are retained, while
+    non-applicable schema codes (e.g., '88') are mapped to `np.nan`. Applies logic only
+    to rows where 'Year of diagnosis' >= 2018.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing 'Derived EOD 2018 Stage Group Recode (2018+)'
+            and 'Year of diagnosis' columns.
+
+    Returns:
+        pd.DataFrame: DataFrame updated with the derived `2018+_Stage` column.
     """
     raw_col = "Derived EOD 2018 Stage Group Recode (2018+)"
     stage_map = {
@@ -202,15 +243,22 @@ def derive_stage_2018_tnm_validation(df):
 
 
 def consolidate_stage(df):
-    """
-    Consolidate stage information from multiple year-specific derivations into a single Stage column.
-    
-    Priority order (highest to lowest):
-        1. 2018+_Stage (AJCC 8th edition, most recent)
-        2. Derived AJCC Stage Group, 7th ed (2010-2015)
-        3. 7th Edition Stage Group Recode (2016-2017)
-    
-    Takes the first non-null/non-NaN value encountered in the priority order.
+    """Consolidate year-specific stage derivations into a single harmonized Stage column.
+
+    Applies a prioritized hierarchical fallback (highest to lowest priority):
+        1. `2018+_Stage` (AJCC 8th edition derivation)
+        2. `Derived AJCC Stage Group, 7th ed (2010-2015)`
+        3. `7th Edition Stage Group Recode (2016-2017)`
+
+    Selects the first non-null stage value encountered across the era-specific columns
+    and assigns it to a unified `Stage` column. Prints audit counts tracking overlapping
+    sources and overall staging completeness.
+
+    Args:
+        df (pd.DataFrame): Dataframe containing era-specific stage derivation columns.
+
+    Returns:
+        pd.DataFrame: Dataframe updated with the consolidated `Stage` column.
     """
     col_2018_plus = "2018+_Stage"
     col_7ed_2010_2015 = "Derived AJCC Stage Group, 7th ed (2010-2015)"
@@ -236,14 +284,31 @@ def consolidate_stage(df):
     return df
 
 def get_stage_III(df):
-    """
-    Filter the dataframe to include only rows with Stage IIIA, IIIB, IIIC, III or IIINOS.
+    """Filter dataset cohort exclusively to Stage III colorectal cancer cases.
+
+    Restricts rows to valid Stage III substages ('IIIA', 'IIIB', 'IIIC'), bare Stage
+    'III' (confirmed major stage, unknown substage), and legacy/NOS codes ('IIINOS').
+
+    Args:
+        df (pd.DataFrame): Dataframe containing the consolidated `Stage` column.
+
+    Returns:
+        pd.DataFrame: Cohort subset filtered strictly to Stage III cases.
     """
     return df[df["Stage"].isin(["IIIA", "IIIB", "IIIC", "III", "IIINOS"])]
 
 def save_cleaned_data(df, filename="cleaned_data.csv"):
-    """
-    Save the cleaned dataframe to a CSV file in the 'data/processed' directory.
+    """Save processed cohort DataFrame to CSV in the repository's processed data folder.
+
+    Resolves the target path relative to this file (`data/processed/<filename>`) to avoid
+    working directory dependency issues and creates parent directories if necessary.
+
+    Args:
+        df (pd.DataFrame): Processed DataFrame to export.
+        filename (str, optional): Target CSV filename. Defaults to "cleaned_data.csv".
+
+    Returns:
+        None
     """
     BASE_DIR = Path(__file__).resolve().parents[2]
     processed_folder = BASE_DIR / "data" / "processed"
@@ -253,14 +318,20 @@ def save_cleaned_data(df, filename="cleaned_data.csv"):
     print(f"Cleaned data saved to {file_path}")
 
 def clean_process():
-    """
-    Run the full data cleaning and transformation process, including:
-    1. Loading raw data
-    2. Converting missing values
-    3. Deriving event flag and survival time
-    4. Deriving stage for 2018+ cases
-    5. Consolidating stage information
-    6. Filtering to Stage III cases
+    """Execute end-to-end data cleaning, stage harmonization, and cohort selection pipeline.
+
+    Orchestrates sequential data transformation steps:
+        1. Loads raw SEER dataset (`get_data`)
+        2. Standardizes SEER missing placeholders to standard NaN (`convert_missing_values`)
+        3. Coerces survival time and derives binary OS event indicator (`event_flag`)
+        4. Derives AJCC 8th edition stage for diagnosis years 2018+ (`derive_stage_2018`)
+        5. Consolidates era-specific stage columns into a single `Stage` field (`consolidate_stage`)
+        6. Subsets cohort strictly to Stage III cases (`get_stage_III`)
+
+    Prints step-by-step audit counts and value distributions throughout execution.
+
+    Returns:
+        pd.DataFrame: Cleaned and filtered Stage III cohort ready for survival modeling.
     """
     print("Running data cleaning and transformation functions...")
     df = get_data()
