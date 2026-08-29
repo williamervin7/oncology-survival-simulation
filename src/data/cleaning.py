@@ -242,8 +242,15 @@ def save_cleaned_data(df, filename="cleaned_data.csv"):
     df.to_csv(file_path, index=False)
     print(f"Cleaned data saved to {file_path}")
 
-
-if __name__ == "__main__":
+def clean_process():
+    """
+    Run the full data cleaning and transformation process, including:
+    1. Loading raw data
+    2. Converting missing values
+    3. Deriving stage for 2018+ cases
+    4. Consolidating stage information
+    5. Filtering to Stage III cases
+    """
     print("Running data cleaning and transformation functions...")
     df = get_data()
     df_clean = convert_missing_values(df)
@@ -257,5 +264,9 @@ if __name__ == "__main__":
     df_clean = get_stage_III(df_clean)
     print(f"\nFiltered to Stage III cases")
     print(df_clean['Stage'].value_counts(dropna=False))
-    save_cleaned_data(df_clean)
+    return df_clean
+
+
+if __name__ == "__main__":
+   clean_process()
     
