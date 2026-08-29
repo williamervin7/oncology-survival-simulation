@@ -64,6 +64,24 @@
 ### Environment / tooling
 - `np.select()` dtype-mismatch behavior differs from older NumPy versions when combining string choices with a float `np.nan` default — worth a project-wide note if other derivation functions use this pattern later.
 
+## [0.5.0] - 2026-08-28
+
+### Added
+- `.github/workflows/ci.yml`: GitHub Actions CI pipeline using `conda-incubator/setup-miniconda` against `environment.yml` (single source of truth, no `requirements.txt` duplication). Runs flake8 lint (syntax/undefined-name errors as hard failures, complexity/line-length as warnings) and pytest, split into `tests/software/` and `tests/statistical/` steps.
+- `pyproject.toml`: `[tool.pytest.ini_options] pythonpath = ["."]` so `src`-based imports resolve under plain `pytest` invocation, not just `python -m pytest`.
+- `tests/statistical/test_placeholder.py`: skip-marked placeholder so CI has a defined, visible reason for zero collected tests until Cox/RSF/Markov statistical tests exist, rather than relying on treating pytest exit code 5 as a pass.
+- `tests/software/test_cleaning.py`: placeholder fuction `test_shape()` with the exit code pass
+
+### Fixed
+- `ModuleNotFoundError: No module named 'src'` in CI-only pytest runs — local runs worked because `python -m pytest` adds the repo root to `sys.path` automatically; direct `pytest` invocation (as used in CI) does not. Resolved via `pythonpath` config above rather than changing local run habits.
+
+### Known issues / follow-ups
+- `tests/software/test_cleaning.py` currently exercises `get_data()` against the real SEER extract in `data/raw/`, which is `.gitignore`d (correctly, per SEER data use terms) and therefore absent on the CI runner. CI has not yet been run against this test file post-import-fix; expect a failure here next. Needs a small synthetic fixture CSV (`tests/fixtures/`) matching real column names/codes but fabricated values, covering known edge cases (AJCC code `88`, 2016–2017 staging-gap years) — not yet built.
+- `BASE_DIR` fragile-path issue (flagged in 0.3.0) is now more urgent: CI runs from a different working-directory context than local Windows runs and is a more reliable way to surface this bug than manual local testing.
+
+### Environment / tooling
+- Confirmed CI runner resolves to Python 3.11.16 / pytest 9.1.1 inside the `oncology-survival-sim` conda env (matches `environment.yml` `name:` field; explicit `activate-environment` set in workflow for self-documentation).
+
 ### Planned (next session)
 - Implement `derive_stage_2010_2015()` and `derive_stage_2016_2017()` (same direct-mapping pattern as `derive_stage_2018()`).
 - Merge all three era-specific Stage columns into one harmonized `Stage` column.
