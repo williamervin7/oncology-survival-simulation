@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os 
 from pathlib import Path
+from src.config import PROJECT_ROOT, STAGE_THREE_CODES, STAGE_THREE_SIZE
 
 def get_data():
     """Load raw SEER cohort CSV from the repository's data directory.
@@ -295,7 +296,7 @@ def get_stage_III(df):
     Returns:
         pd.DataFrame: Cohort subset filtered strictly to Stage III cases.
     """
-    return df[df["Stage"].isin(["IIIA", "IIIB", "IIIC", "III", "IIINOS"])]
+    return df[df["Stage"].isin(STAGE_THREE_CODES)].copy()
 
 def save_cleaned_data(df, filename="cleaned_data.csv"):
     """Save processed cohort DataFrame to CSV in the repository's processed data folder.
