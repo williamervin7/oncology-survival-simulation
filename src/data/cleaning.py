@@ -26,13 +26,18 @@ def event_flag(df):
     Derive binary event flag (overall survival) and coerce survival time to numeric.
     """
     df["Time"] = pd.to_numeric(df["Survival months"], errors="coerce")
+
+    vital_status = df["Vital status recode (study cutoff used)"]
     df["Event"] = np.where(
-        df["Vital status recode (study cutoff used)"] == "Dead",
-        1,
-        0,
+        vital_status == "Dead", 1,
+        np.where(vital_status == "Alive", 0, np.nan)
     )
-    # Explicitly drop rows missing core outcome metrics (Time or Event)
+
+    n_before = len(df)
     df_clean = df.dropna(subset=["Time", "Event"])
+    n_dropped = n_before - len(df_clean)
+    print(f"event_flag: dropped {n_dropped}/{n_before} rows with unparseable Time or unrecognized vital status")
+
     return df_clean
 
 def derive_stage_2018(df):

@@ -5,7 +5,7 @@ from src.data.cleaning import convert_missing_values, derive_stage_2018, consoli
 
 def test_convert_missing_values():
     df = pd.DataFrame({
-        "col1": ["Blanks(s)", "Unknown", "999", "Unknown", "9999", "Blank(s)", "9999", "valid"],
+        "col1": ["Blank(s)", "Unknown", "999", "Unknown", "9999", "Blank(s)", "9999", "valid"],
         "col2": [1, 2, 3, 4, 5, 6, 7, 8]
     })
 
@@ -28,21 +28,14 @@ def test_event_flag():
         "Vital status recode (study cutoff used)": ["Dead", "Alive", "Dead", "Alive", "Dead", "Dead"]
     })
     result = event_flag(df)
-    # Check that the event flag is correctly derived
-    assert result["Event"].iloc[0] == 1
-    assert result["Event"].iloc[1] == 0
-    assert result["Event"].iloc[2] == 1
-    assert result["Event"].iloc[3] == 0
-    assert result["Event"].iloc[4] == 1
-    assert result["Event"].iloc[5] == 1
 
-    # Check that the survival months are correctly coerced to numeric, with invalid entries converted to NaN
-    assert result["Time"].iloc[0] == 12
-    assert result["Time"].iloc[1] == 24
-    assert result["Time"].iloc[2] == 36
-    assert result["Time"].iloc[3] == 48
-    assert result["Time"].iloc[4] == 60
-    assert result["Time"].iloc[5] == np.nan
+    # Row 5 has unparseable Survival months ("invalid" -> NaN via pd.to_numeric),
+    # so it should be dropped entirely by dropna(subset=["Time", "Event"]).
+    assert len(result) == 5
+
+    # Remaining rows (0-4) should have correctly derived Event and Time
+    assert list(result["Event"]) == [1, 0, 1, 0, 1]
+    assert list(result["Time"]) == [12, 24, 36, 48, 60]
 
 # after implementing the cleaning functions this test will check if the shape of the cleaned dataframe is as expected
 def test_derive_stage_2018():
