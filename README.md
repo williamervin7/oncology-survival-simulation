@@ -1,3 +1,5 @@
+![Build Status](https://github.com/williamervin7/oncology-survival-simulation/actions/workflows/ci.yml/badge.svg)
+
 # Oncology Survival Analysis & Patient-Level Markov Microsimulation
 
 An applied data science and clinical biostatistics framework built to model time-to-event oncology data, map continuous survival curves to discrete state transition probabilities, and execute a patient-level Monte Carlo microsimulation for disease progression support.
