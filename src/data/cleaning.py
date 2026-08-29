@@ -1,13 +1,14 @@
 import numpy as np
 import pandas as pd
 import os 
-
+from pathlib import Path
 
 def get_data():
-
-    BASE_DIR = os.path.dirname(os.getcwd()) # Gets the root project directory
-    data_folder = os.path.join(BASE_DIR, "data")
-    file = os.path.join(data_folder, "raw", "raw_data.csv")
+    # Anchored to this file's location, not the process's working directory.
+    # src/data/cleaning.py -> parents[2] -> repo root
+    BASE_DIR = Path(__file__).resolve().parents[2]
+    data_folder = BASE_DIR / "data"
+    file = data_folder / "raw" / "raw_data.csv"
     df = pd.read_csv(file)
     print("Data loaded successfully.")
     print(f"Raw data shape: {df.shape}")
@@ -50,8 +51,8 @@ def derive_stage_2018(df):
     }
     is_2018_plus = df["Year of diagnosis"] >= 2018
 
-    df["Stage"] = None
-    df.loc[is_2018_plus, "Stage"] = (
+    df["2018+_Stage"] = None
+    df.loc[is_2018_plus, "2018+_Stage"] = (
         df.loc[is_2018_plus, raw_col].astype(str).str.strip().map(stage_map)
     )
     return df
@@ -175,16 +176,86 @@ def derive_stage_2018_tnm_validation(df):
     stage = np.select(conditions, choices, default="UNSTAGED")
     stage = pd.Series(stage, index=t_raw.index).replace("UNSTAGED", np.nan)
 
-    df["Stage"] = None  # Initialize Stage column with NaN
-    df.loc[is_2018_plus, "Stage"] = stage
+    df["2018+_Stage"] = None  # Initialize 2018+_Stage column with NaN
+    df.loc[is_2018_plus, "2018+_Stage"] = stage
 
     # Transparency check: report staging yield rather than letting
     # unstageable rows disappear silently
     n_total = is_2018_plus.sum()
-    n_unstaged = df.loc[is_2018_plus, "Stage"].isna().sum()
+    n_unstaged = df.loc[is_2018_plus, "2018+_Stage"].isna().sum()
     print(
         f"2018+ Stage derivation: {n_total - n_unstaged}/{n_total} rows staged "
         f"({n_unstaged} unstageable: TX/NX/MX, code 88, T0, or unresolved sub-split ambiguity)"
     )
 
     return df
+
+
+def consolidate_stage(df):
+    """
+    Consolidate stage information from multiple year-specific derivations into a single Stage column.
+    
+    Priority order (highest to lowest):
+        1. 2018+_Stage (AJCC 8th edition, most recent)
+        2. Derived AJCC Stage Group, 7th ed (2010-2015)
+        3. 7th Edition Stage Group Recode (2016-2017)
+    
+    Takes the first non-null/non-NaN value encountered in the priority order.
+    """
+    col_2018_plus = "2018+_Stage"
+    col_7ed_2010_2015 = "Derived AJCC Stage Group, 7th ed (2010-2015)"
+    col_7ed_2016_2017 = "7th Edition Stage Group Recode (2016-2017)"
+
+    overlap = df[[col_2018_plus, col_7ed_2010_2015, col_7ed_2016_2017]].notna().sum(axis=1)
+    n_overlapping = (overlap > 1).sum()
+    print(f"Rows with more than one stage source populated: {n_overlapping}")
+
+    df["Stage"] = df[col_2018_plus].fillna(
+        df[col_7ed_2010_2015].fillna(df[col_7ed_2016_2017])
+    )
+    
+    # Transparency check: report stage consolidation results
+    n_total = len(df)
+    n_staged = df["Stage"].notna().sum()
+    n_unstaged = df["Stage"].isna().sum()
+    print(
+        f"Stage consolidation: {n_staged}/{n_total} rows have stage information "
+        f"({n_unstaged} unstaged)"
+    )
+    
+    return df
+
+def get_stage_III(df):
+    """
+    Filter the dataframe to include only rows with Stage IIIA, IIIB, IIIC, III or IIINOS.
+    """
+    return df[df["Stage"].isin(["IIIA", "IIIB", "IIIC", "III", "IIINOS"])]
+
+def save_cleaned_data(df, filename="cleaned_data.csv"):
+    """
+    Save the cleaned dataframe to a CSV file in the 'data/processed' directory.
+    """
+    BASE_DIR = Path(__file__).resolve().parents[2]
+    processed_folder = BASE_DIR / "data" / "processed"
+    processed_folder.mkdir(parents=True, exist_ok=True)
+    file_path = processed_folder / filename
+    df.to_csv(file_path, index=False)
+    print(f"Cleaned data saved to {file_path}")
+
+
+if __name__ == "__main__":
+    print("Running data cleaning and transformation functions...")
+    df = get_data()
+    df_clean = convert_missing_values(df)
+    print(f"Missing values converted")
+    df_clean = derive_stage_2018(df_clean)
+    print(f"Stage derived for 2018+ cases")
+    print(df_clean.loc[df_clean['Year of diagnosis'] >= 2018, '2018+_Stage'].value_counts(dropna=False))
+    df_clean = consolidate_stage(df_clean)
+    print(f"\nConsolidated stage column created")
+    print(df_clean['Stage'].value_counts(dropna=False))
+    df_clean = get_stage_III(df_clean)
+    print(f"\nFiltered to Stage III cases")
+    print(df_clean['Stage'].value_counts(dropna=False))
+    save_cleaned_data(df_clean)
+    
