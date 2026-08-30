@@ -87,3 +87,27 @@
 - Merge all three era-specific Stage columns into one harmonized `Stage` column.
 - Run coverage/count checks by diagnosis year and stage; verify Stage III counts specifically across all three eras.
 - Investigate possible C18.1 (appendix) contamination in the cohort before declaring it finalized
+
+## [0.6.0] - 2026-08-29
+
+### Added
+- `cleaning.py`: `derive_stage_2018()`, `derive_stage_2018_tnm_validation()`, `consolidate_stage()`, and `get_stage_III()` — full AJCC staging harmonization pipeline resolving the 2016-2017 field gap by combining 7th edition (2010-2015), 7th edition recode (2016-2017), and EOD 2018 (2018+) sources into a single `Stage` column.
+- `cleaning.py`: `save_cleaned_data()` and `clean_process()` — end-to-end orchestration function running the full pipeline (load → convert missing → event flag → stage derivation → consolidation → Stage III filter) with step-by-step audit printouts.
+- `src/config.py`: new centralized config module — `RANDOM_SEED`, `DEFAULT_TIME_HORIZON`, `STAGE_THREE_CODES`, `STAGE_THREE_SIZE` (verified against cleaned data, N=14,443), and `PROJECT_ROOT`/`DATA_DIR` anchored via `Path(__file__)`.
+- `tests/software/test_cleaning.py`: test coverage added for `convert_missing_values()`, `event_flag()`, `derive_stage_2018()`, `consolidate_stage()`, and `get_stage_III()`.
+- `.github/workflows/ci.yml`: GitHub Actions pipeline running `pytest tests/software/` on push.
+- `eda.ipynb`: Part 1 (data exploration) started — cohort definition markdown, data load, row-count integrity check against `STAGE_THREE_SIZE`, `Time`/`Event` distribution histograms and summary statistics, overall Kaplan-Meier curve for the Stage III cohort with trajectory/clinical-insights writeup.
+
+### Fixed
+- `BASE_DIR` path resolution in `cleaning.py` (`get_data()`, `save_cleaned_data()`) switched from `os.path.dirname(os.getcwd())` to `Path(__file__).resolve().parents[2]`, removing the working-directory dependency flagged in 0.3.0. Surfaced as a real, reproducible failure once CI began running from a different working-directory context than local runs — confirming this wasn't just a theoretical risk.
+- `eda.ipynb` data-load cell updated to import `DATA_DIR` from `src/config.py` instead of re-deriving `BASE_DIR` via `os.path.dirname(os.getcwd())` — same fragile-path pattern just fixed in `cleaning.py`, now propagated to the notebook so path resolution has a single source of truth.
+- `event_flag()`: `Event` was derived via `np.where(vital_status == "Dead", 1, 0)`, which can never produce `NaN` — meaning `dropna(subset=["Event"])` was dead code, and any row with unrecognized/missing vital status was silently coded as censored (`Event = 0`) rather than dropped or flagged. Corrected to map unrecognized vital status explicitly to `NaN` so those rows are excluded rather than miscoded as survivors.
+- AJCC stage code `0` (in `Derived EOD 2018 Stage Group Recode (2018+)`) confirmed as genuine AJCC Stage 0 (in situ), not a missing-data placeholder — resolves the open question from 0.3.0. Does not affect the Stage III cohort either way, since `"0"` was never in the Stage III filter, but closes out the staging-code verification work. (Code `88` was already confirmed as "not applicable" prior to this session.)
+
+### Known issues / follow-ups
+- `convert_missing_values()`'s per-column missing-code handling (flagged in 0.3.0) is still outstanding — needed before covariate-level EDA proceeds past `Time`/`Event`.
+- `derive_stage_2018_tnm_validation()` exists as a cross-check derivation against PDQ/NCI T/N/M stage-grouping tables but is not yet wired into `clean_process()` or reconciled against `derive_stage_2018()`'s output.
+
+### Notes
+- Decided to split `eda.ipynb` into two notebooks going forward: `eda.ipynb` for data exploration (distributions, missingness, univariate/bivariate covariate checks) and a new `modeling.ipynb` for Cox PH / RSF fitting and comparison — keeping exploratory and model-development work separated for cleaner TRIPOD-aligned reporting.
+- Next planned step: covariate-level EDA (distributions, per-field missingness, stratified KM by candidate covariate, collinearity check) before moving into `modeling.ipynb`.
