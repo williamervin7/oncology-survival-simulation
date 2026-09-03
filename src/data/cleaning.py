@@ -1,7 +1,15 @@
 import numpy as np
 import pandas as pd
 import os 
+import sys
 from pathlib import Path
+
+# src/data/cleaning.py -> parents[1] is 'src', parents[2] is project root
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+# Now Python can find 'src' regardless of execution context
 from src.config import PROJECT_ROOT, STAGE_THREE_CODES, STAGE_THREE_SIZE
 
 def get_data():
@@ -22,6 +30,24 @@ def get_data():
     df = pd.read_csv(file)
     print("Data loaded successfully.")
     print(f"Raw data shape: {df.shape}")
+    return df
+
+def get_clean_data():
+    """Load cleaned SEER cohort CSV from the repository's processed data directory.
+
+    Resolves the root directory dynamically relative to this script's location
+    (`data/processed/cleaned_data.csv`) to ensure path resolution is independent of the
+    current working directory. Prints data dimensions upon successful load.
+
+    Returns:
+        pd.DataFrame: The cleaned SEER dataset.
+    """
+    BASE_DIR = Path(__file__).resolve().parents[2]
+    processed_folder = BASE_DIR / "data" / "processed"
+    file = processed_folder / "cleaned_data.csv"
+    df = pd.read_csv(file)
+    print("Cleaned data loaded successfully.")
+    print(f"Cleaned data shape: {df.shape}")
     return df
 
 
