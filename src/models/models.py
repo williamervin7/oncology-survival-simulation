@@ -48,6 +48,35 @@ def univariate_model(df, duration_col, event_col, covariate):
     cph.fit(df[[duration_col, event_col, covariate]], duration_col=duration_col, event_col=event_col)
     return cph
 
+def preprocessing(df):
+    """Encode model covariates as numeric columns.
+
+    Sex and chemotherapy are binary encoded, while the categorical ``Stage``
+    column is replaced with one-hot indicator columns.
+    """
+    df_processed = df.copy()
+
+    # Check that the expected values are present before mapping
+    assert df_processed["Sex"].isin(["Female", "Male"]).all(), "Unexpected value in Sex"
+    assert df_processed["Chemotherapy recode (yes, no/unk)"].isin(["No/Unknown", "Yes"]).all(), "Unexpected value in Chemo"
+
+    df_processed["Sex"] = df_processed["Sex"].map({"Female": 0, "Male": 1})
+    df_processed["Chemotherapy recode (yes, no/unk)"] = df_processed[
+        "Chemotherapy recode (yes, no/unk)"
+    ].map({"No/Unknown": 0, "Yes": 1})
+
+    stage_dummies = pd.get_dummies(
+    df_processed["Stage"],
+    prefix="Stage",
+    dtype=int,
+    drop_first=True)   # drops IIIA if it's first alphabetically/first in category order
+    df_processed = pd.concat(
+        [df_processed.drop(columns="Stage"), stage_dummies],
+        axis=1,
+    )
+
+    return df_processed
+
 def run_univariate_screen(df, duration_col, event_col, covariates):
     """
     Fits a separate univariate Cox PH model for each candidate covariate.

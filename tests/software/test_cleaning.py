@@ -9,6 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from src.data.cleaning import convert_missing_values, derive_stage_2018, consolidate_stage, get_stage_III, event_flag, convert_cols
+from src.models.models import preprocessing
 
 def test_convert_missing_values():
     df = pd.DataFrame({
@@ -114,4 +115,25 @@ def test_convert_cols():
     assert pd.isna(col.iloc[4])   # unparseable text
     assert pd.isna(col.iloc[5])   # genuinely missing input
     assert col.dtype == "float64"
+
+
+def test_preprocessing_encodes_covariates():
+    df = pd.DataFrame({
+        "Sex": ["Female", "Male", "Female"],
+        "Chemotherapy recode (yes, no/unk)": ["Yes", "No/Unknown", "Yes"],
+        "Stage": ["IIIA", "IIIB", "IIIC"],
+    })
+
+    with pytest.raises(AssertionError):
+        preprocessing(df)
+    result = preprocessing(df)
+
+    assert list(result["Sex"]) == [0, 1, 0]
+    assert list(result["Chemotherapy recode (yes, no/unk)"]) == [1, 0, 1]
+    assert "Stage_IIIA" not in result.columns   # dropped as reference category]
+    assert list(result["Stage_IIIB"]) == [0, 1, 0]
+    assert list(result["Stage_IIIC"]) == [0, 0, 1]
+    assert "Stage" not in result.columns
+    assert all(pd.api.types.is_integer_dtype(dt) for dt in result[["Stage_IIIC", "Stage_IIIB"]].dtypes)
+    assert list(df["Sex"]) == ["Female", "Male", "Female"]
 
