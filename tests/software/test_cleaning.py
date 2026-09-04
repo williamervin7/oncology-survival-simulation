@@ -113,5 +113,5 @@ def test_convert_cols():
     assert col.iloc[3] == 90
     assert pd.isna(col.iloc[4])   # unparseable text
     assert pd.isna(col.iloc[5])   # genuinely missing input
-    assert col.dtype == "int"
+    assert col.dtype == "int64"
 
