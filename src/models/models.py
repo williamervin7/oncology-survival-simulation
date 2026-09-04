@@ -69,7 +69,7 @@ def run_univariate_screen(df, duration_col, event_col, covariates):
 
 if __name__ == "__main__":
     df_clean = resolve_special_codes()
-    #result = univariate_model(df_clean, duration_col='Time', event_col='Event', covariate='Age recode with <1 year olds and 90+')
-    #result.print_summary()
+    result = univariate_model(df_clean, duration_col='Time', event_col='Event', covariate='Age recode with single ages and 90+')
+    result.print_summary()
 
     

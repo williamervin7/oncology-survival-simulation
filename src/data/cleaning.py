@@ -68,6 +68,13 @@ def convert_missing_values(df):
     df_clean = df.replace(missing_patterns, np.nan)
     return df_clean
 
+def convert_cols(df):
+    df['Age recode with single ages and 90+'] = (
+    df['Age recode with single ages and 90+']
+    .str.extract(r'(\d+)', expand=False)
+    .astype(int))
+    return df
+
 def event_flag(df):
     """Derive Overall Survival (OS) event indicator and numerical follow-up duration.
 
@@ -364,6 +371,8 @@ def clean_process():
     df = get_data()
     df_clean = convert_missing_values(df)
     print(f"Missing values converted")
+    df_clean = convert_cols(df_clean)
+    print(f"Age column coerced to numeric")
     df_clean = event_flag(df_clean)
     print(f"Event flag derived and survival time coerced to numeric")
     df_clean = derive_stage_2018(df_clean)
@@ -379,5 +388,6 @@ def clean_process():
 
 
 if __name__ == "__main__":
-   clean_process()
+   df = clean_process()
+   save_cleaned_data(df)
     

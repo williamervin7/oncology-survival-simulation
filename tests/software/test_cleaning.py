@@ -1,7 +1,14 @@
 import pytest
 import numpy as np
 import pandas as pd
-from src.data.cleaning import convert_missing_values, derive_stage_2018, consolidate_stage, get_stage_III, event_flag
+import sys
+from pathlib import Path
+
+# tests/software/test_cleaing.py -> parents[1] is 'tests', parents[2] is project root
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+from src.data.cleaning import convert_missing_values, derive_stage_2018, consolidate_stage, get_stage_III, event_flag, convert_cols
 
 def test_convert_missing_values():
     df = pd.DataFrame({
@@ -90,5 +97,21 @@ def test_get_stage_III():
     assert len(df_stage_III) == 5  # There should be 5 rows corresponding to Stage III cases
     
 
+def test_convert_cols():
+    df = pd.DataFrame({
+        "Age recode with single ages and 90+": [
+            "001 years", "005 years", "010 years", "90+ years", "invalid", np.nan
+        ]
+    })
 
+    result = convert_cols(df)
+    col = result["Age recode with single ages and 90+"]
+
+    assert col.iloc[0] == 1
+    assert col.iloc[1] == 5
+    assert col.iloc[2] == 10
+    assert col.iloc[3] == 90
+    assert pd.isna(col.iloc[4])   # unparseable text
+    assert pd.isna(col.iloc[5])   # genuinely missing input
+    assert col.dtype == "int"
 
