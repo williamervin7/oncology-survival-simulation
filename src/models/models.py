@@ -42,7 +42,12 @@ def resolve_special_codes():
     print(f"Recoded 99 -> NaN in: {cols}")
     return df_clean
     
-    
+def remove_stage_III(df):
+    """
+    Removes rows with Stage III or IIINOS
+    """    
+    return df[~df["Stage"].isin(["III", "IIINOS"])]
+
 def univariate_model(df, duration_col, event_col, covariate):
     cph = CoxPHFitter()
     cph.fit(df[[duration_col, event_col, covariate]], duration_col=duration_col, event_col=event_col)
@@ -98,7 +103,18 @@ def run_univariate_screen(df, duration_col, event_col, covariates):
 
 if __name__ == "__main__":
     df_clean = resolve_special_codes()
-    result = univariate_model(df_clean, duration_col='Time', event_col='Event', covariate='Age recode with single ages and 90+')
-    result.print_summary()
+    df_clean = remove_stage_III(df_clean)
+    df_encoded = preprocessing(df_clean)
+    print("***************")
+    print(df_clean[["Stage"]].value_counts())
+    result = run_univariate_screen(df_encoded, duration_col='Time', event_col='Event', covariates=[
+        'Age recode with single ages and 90+',
+        'Sex',
+        'Chemotherapy recode (yes, no/unk)',
+        'Stage_IIIB',   # not 'Stage' — it no longer exists as one column
+        'Stage_IIIC',
+    ],)
+    print(result)
+
 
     
