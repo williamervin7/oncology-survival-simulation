@@ -72,7 +72,7 @@ def convert_cols(df):
     df['Age recode with single ages and 90+'] = (
     df['Age recode with single ages and 90+']
     .str.extract(r'(\d+)', expand=False)
-    .astype(int))
+    .astype(float))
     return df
 
 def event_flag(df):
