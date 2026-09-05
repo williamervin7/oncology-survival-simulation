@@ -1,4 +1,9 @@
 ![Build Status](https://github.com/williamervin7/oncology-survival-simulation/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.11-blue)
+![Conda](https://img.shields.io/badge/environment-conda-44A833?logo=anaconda)
+![License](https://img.shields.io/github/license/williamervin7/oncology-survival-simulation)
+![Last Commit](https://img.shields.io/github/last-commit/williamervin7/oncology-survival-simulation)
+![Methodology](https://img.shields.io/badge/methodology-STROBE%20%7C%20TRIPOD-informational)
 
 # Oncology Survival Analysis & Patient-Level Markov Microsimulation
 
