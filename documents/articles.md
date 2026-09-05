@@ -98,3 +98,20 @@
 
 #### Relevance to My Project / Code Pipeline
 - Confirms TX is a universal AJCC convention (not colon-specific, not a different cancer type) — resolved the question of why TX doesn't appear in the Stage III grouping table (Table 4): by definition, an unassessable T category cannot be placed in any determinable stage group.
+
+## Staging Paradox — Colon Cancer AJCC Substage vs. Survival
+
+- **Source / Citation:** Liao Y-T, Huang J, Hung J-S, Huang K-W, Liang J-T (2024). "Staging Paradox and recurrence pattern among stage IIB, IIC, and IIIA colon cancers: a retrospective cohort study." *International Journal of Colorectal Disease*. DOI: 10.1007/s00384-024-04737-1. PMC11471697.
+- **Cancer Site / Population:** Colon cancer, stage IIB (pT4aN0M0), IIC (pT4bN0M0), IIIA (pT1-2N1M0); single-institution retrospective cohort, n=282, 2011–2019.
+- **Key Finding:** Survival rates of stage IIB/IIC colon cancer are paradoxically worse than stage IIIA, despite IIIA nominally being a "higher" substage. Factors examined: lymph node harvest adequacy, chemotherapy administration, locoregional recurrence.
+- **Relevance to My Project:** Direct precedent for the non-monotonic HR pattern found in my own univariate Cox screen (IIIB HR < IIIA reference). Confirms this class of staging inconsistency is an established, studied phenomenon rather than a pipeline artifact.
+
+- **Source / Citation:** (2024). "Revisiting the survival paradox between stage IIB/C and IIIA colon cancer." *Scientific Reports* / PubMed 39333782. DOI referenced via nature.com/articles/s41598-024-73496-4.
+- **Cancer Site / Population:** Colon cancer, SEER data (2018–2021, 8th edition TNM staging), n=4,692.
+- **Key Finding:** Multivariate Cox regression: stage IIIA had significantly lower cancer-specific mortality (HR=0.374) and overall mortality (HR=0.575) vs. stage IIB — using SEER data and Cox regression, same data source and method as my own pipeline.
+- **Relevance to My Project:** Closest methodological match to my own analysis (SEER + Cox PH). Useful direct citation for methods/discussion section given matching data source and modeling approach.
+
+- **Source / Citation:** Zhang et al. "Poor survival in stage IIB/C (T4N0) compared to stage IIIA... colon cancer persists even after adjusting for adequate lymph nodes retrieved and receipt of adjuvant chemotherapy." PMC4944507.
+- **Cancer Site / Population:** Colon cancer, National Cancer Data Base, n=34,999, diagnosed 2003–2012.
+- **Key Finding:** Paradox persists after adjusting for lymph node dissection adequacy and chemotherapy receipt (adjusted HR reduced from 1.76 to 1.51, but did not disappear) — suggests the paradox isn't fully explained by treatment/staging-quality confounders alone.
+- **Relevance to My Project:** Useful caution for my own chemo-receipt covariate discussion — shows adjustment for treatment doesn't fully resolve this kind of staging anomaly.

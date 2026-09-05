@@ -111,3 +111,27 @@
 ### Notes
 - Decided to split `eda.ipynb` into two notebooks going forward: `eda.ipynb` for data exploration (distributions, missingness, univariate/bivariate covariate checks) and a new `modeling.ipynb` for Cox PH / RSF fitting and comparison — keeping exploratory and model-development work separated for cleaner TRIPOD-aligned reporting.
 - Next planned step: covariate-level EDA (distributions, per-field missingness, stratified KM by candidate covariate, collinearity check) before moving into `modeling.ipynb`.
+
+## [0.7.0] - 2026-09-04
+
+### Added
+- `models.py`: `resolve_special_codes()` — recodes SEER field-specific `99` sentinel values to NaN in `Regional nodes examined (1988+)`, `Regional nodes positive (1988+)`, and `RX Summ--Surg Prim Site (1998-2022)`. Deliberately does not touch codes like `9`/`88` in the node-count fields, which are legitimate exact counts (SEER allows 01-89 as real values), not missing-value codes.
+- `cleaning.py`: age-parsing logic for `Age recode with single ages and 90+` — strips ` years` suffix, top-codes `90+` to `90`, casts to float.
+- `models.py`: `univariate_model()` and `run_univariate_screen()` — fit single-covariate Cox PH models for reporting/comparison purposes only (not used as a selection filter for the multivariable model, per TRIPOD guidance).
+- `models.py`: `preprocessing()` — binary-encodes `Sex` and `Chemotherapy recode (yes, no/unk)`, one-hot encodes `Stage` substage with `drop_first=True` (IIIA as reference category), with input-validation assertions to fail loudly on unexpected category values.
+- `modles.py`: `remove_stage_III()`  - removes cases coded `III` or `IIINOS`
+- Cohort restriction: excluded 204 cases coded `III` or `IIINOS` (unspecified substage) from substage-adjusted analyses, since they cannot be assigned to IIIA/IIIB/IIIC and were silently becoming part of the dummy-encoded reference group.
+- `tests/software/test_cleaning.py`: coverage for age-parsing function, including genuinely missing (`NaN`) input and unparseable text, both expected to return NaN without raising.
+- `tests/software/test_cleaning.py`: coverage for `preprocessing()`, including full three-category Stage encoding, reference-category exclusion, dtype checks written to be platform-independent (Windows `int32` vs. Linux CI `int64`), and rejection of malformed input via the new validation assertions.
+- `seer_field_selection_rationale.md`: replaced `Age recode with <1 year olds and 90+` entry with `Age recode with single ages and 90+`, documenting the side-by-side comparison used to confirm the two fields derive from the same underlying age value before dropping the ranged-bin version.
+
+### Fixed
+- `resolve_special_codes()`: corrected `df[cols].replace(...)` (which silently dropped all non-target columns) to `df_clean[cols] = df_clean[cols].replace(...)`, preserving the full dataframe.
+- Data pipeline bug: original SEER pull included `Age recode with <1 year olds and 90+` (5-year ranged bins, e.g. "60-64 years") rather than a continuous covariate. Re-extracted with `Age recode with single ages and 90+` for single-year resolution.
+
+### Findings
+- Univariate Cox PH screen on Stage substage (IIIA reference, n=14,239) surfaced a non-monotonic hazard pattern: IIIC HR = 2.13 (expected direction), but IIIB HR = 0.73 — lower hazard than the nominally milder IIIA. Confirmed via literature search that this is a documented phenomenon in colon cancer staging research ("staging paradox"), attributed to nodal status outweighing tumor depth as a survival predictor, rather than a pipeline defect. Ruled out reference-category contamination (from the `III`/`IIINOS` exclusion) as the cause — estimates were materially unchanged after exclusion.
+
+### Known issues / follow-ups
+- `RX Summ--Surg Prim Site (1998-2022)` code `99` recoded to NaN on inferred SEER convention (trailing-9s = unknown); exact field-specific definition not yet confirmed against SEER Appendix C documentation.
+- Chemotherapy receipt covariate likely subject to immortal time bias (patients must survive long enough to receive adjuvant chemo) — current univariate HR (0.32) should be treated as an upper-bound estimate of protective effect, not a causal estimate. Flag for discussion/limitations section.
