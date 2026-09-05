@@ -135,3 +135,10 @@
 ### Known issues / follow-ups
 - `RX Summ--Surg Prim Site (1998-2022)` code `99` recoded to NaN on inferred SEER convention (trailing-9s = unknown); exact field-specific definition not yet confirmed against SEER Appendix C documentation.
 - Chemotherapy receipt covariate likely subject to immortal time bias (patients must survive long enough to receive adjuvant chemo) — current univariate HR (0.32) should be treated as an upper-bound estimate of protective effect, not a causal estimate. Flag for discussion/limitations section.
+
+### Planned (next session)
+1. Decide and implement chemo-receipt handling for information leakage: choose between excluding chemo from the Phase 1 model, a landmark analysis, or a formal time-varying covariate — document the rationale before implementing.
+2. Build `model_eda.ipynb`: run Kaplan-Meier on the final analytic cohort (overall + stratified by AJCC substage) as a visual complement to the Cox output.
+3. Fit the full multivariable Cox PH model in `model_eda.ipynb` using the finalized covariate set (post chemo-leakage decision).
+4. Run `cph.check_assumptions()` against the fitted multivariable model; document per-covariate Schoenfeld residual results (not just pass/fail) and pre-commit remedy hierarchy (stratification before time-varying extension) before viewing results.
+5. Continue domain-knowledge literature research on remaining candidate covariates (tumor grade/histology) to confirm second-pass inclusion list before RSF comparison phase begins.
