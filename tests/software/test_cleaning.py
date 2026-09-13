@@ -120,16 +120,14 @@ def test_convert_cols():
 def test_preprocessing_encodes_covariates():
     df = pd.DataFrame({
         "Sex": ["Female", "Unknown"],
-        "Chemotherapy recode (yes, no/unk)": ["Yes", "No/Unknown"],
-        "Stage": ["IIIA", "IIIB"],
+        "Stage": ["IIIA", "IIIB"]
     })
     with pytest.raises(AssertionError):
         preprocessing(df)
 
     df = pd.DataFrame({
         "Sex": ["Female", "Male", "Female"],
-        "Chemotherapy recode (yes, no/unk)": ["Yes", "No/Unknown", "Yes"],
-        "Stage": ["IIIA", "IIIB", "IIIC"],
+        "Stage": ["IIIA", "IIIB", "IIIC"]
     })
     
     result = preprocessing(df)
