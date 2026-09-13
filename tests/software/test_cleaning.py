@@ -120,11 +120,17 @@ def test_convert_cols():
 def test_preprocessing_encodes_covariates():
     df = pd.DataFrame({
         "Sex": ["Female", "Unknown"],
-        "Stage": ["IIIA", "IIIB"]
+        "Stage": ["IIIA", "IIIB"],
+        "Marital status at diagnosis": ["Married", "Single", "Divorced"],
+        "Race recode (White, Black, Other)": ["White", "Black", "Other"],
+        "Regional nodes examined (1988+)": [5, 10, 15],
+        "Age recode with single ages and 90+": [30, 40, 50],
+        "Year of diagnosis": [2010, 2011, 2012]
     })
     with pytest.raises(AssertionError):
         preprocessing(df)
 
+    # Now test with valid values
     df = pd.DataFrame({
         "Sex": ["Female", "Male", "Female"],
         "Stage": ["IIIA", "IIIB", "IIIC"],

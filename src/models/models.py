@@ -183,6 +183,8 @@ if __name__ == "__main__":
     df_clean = remove_unspecified_stage_III(df_clean)
     df_encoded = preprocessing(df_clean)
     print("***************")
+    print(df_encoded.columns.tolist())
+    
     """print(df_clean[["Stage"]].value_counts())
     result = run_univariate_screen(df_encoded, duration_col='Time', event_col='Event', covariates=[
         'Age recode with single ages and 90+',
