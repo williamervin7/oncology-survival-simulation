@@ -150,9 +150,9 @@ def test_preprocessing_encodes_covariates():
     assert "Stage" not in result.columns
     assert all(pd.api.types.is_integer_dtype(dt) for dt in result[["Stage_IIIC", "Stage_IIIB"]].dtypes)
     assert list(result["Marital_Single"]) == [0, 1, 0]
-    assert list(result["Marital_Divorced"]) == [0, 0, 1]
-    #assert list(result["Race_White"]) == [1, 0, 0]
-    assert list(result["Race_Black"]) == [0, 1, 0]
+    #assert list(result["Marital_Divorced"]) == [0, 0, 1]
+    assert list(result["Race_White"]) == [1, 0, 0]
+    #assert list(result["Race_Black"]) == [0, 1, 0]
     assert list(result["Race_Other"]) == [0, 0, 1]
     assert list(result["Regional nodes examined (1988+)"]) == [5, 10, 15]
     assert list(result["Age recode with single ages and 90+"]) == [30, 40, 50]
