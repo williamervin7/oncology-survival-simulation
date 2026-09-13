@@ -73,12 +73,12 @@ def preprocessing(df):
     # Define primary Cox PH model columns
     # ------------------------------------------------------------------
     cox_cols = [
-        "Age",
+        "Age recode with single ages and 90+",
         "Sex",
         "Stage",
-        "Marital status",
-        "Race",
-        "Regional nodes examined",
+        "Marital status at diagnosis",
+        "Race recode (White, Black, Other)",
+        "Regional nodes examined (1988+)",
         "Year of diagnosis",
     ]
 
@@ -128,7 +128,7 @@ def preprocessing(df):
      # get dummies for marital status and race, dropping the first category to avoid multicollinearity
     # ------------------------------------------------------------------
     marital_dummies = pd.get_dummies(
-        df_processed["Marital status"],
+        df_processed["Marital status at diagnosis"],
         prefix="Marital",
         dtype=int,
         drop_first=True,
@@ -136,14 +136,14 @@ def preprocessing(df):
 
     df_processed = pd.concat(
     [
-        df_processed.drop(columns="Marital status"),
+        df_processed.drop(columns="Marital status at diagnosis"),
         marital_dummies,
     ],
     axis=1,
     )
 
     race_dummies = pd.get_dummies(
-        df_processed["Race"],
+        df_processed["Race recode (White, Black, Other)"],
         prefix="Race",
         dtype=int,
         drop_first=True,
@@ -151,7 +151,7 @@ def preprocessing(df):
 
     df_processed = pd.concat(
     [
-        df_processed.drop(columns="Race"),
+        df_processed.drop(columns="Race recode (White, Black, Other)"),
         race_dummies,
     ],
     axis=1,
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     df_clean = remove_unspecified_stage_III(df_clean)
     df_encoded = preprocessing(df_clean)
     print("***************")
-    print(df_clean[["Stage"]].value_counts())
+    """print(df_clean[["Stage"]].value_counts())
     result = run_univariate_screen(df_encoded, duration_col='Time', event_col='Event', covariates=[
         'Age recode with single ages and 90+',
         'Sex',
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         'Stage_IIIB',   # not 'Stage' — it no longer exists as one column
         'Stage_IIIC',
     ],)
-    print(result)
+    print(result)"""
 
 
     
