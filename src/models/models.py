@@ -42,7 +42,7 @@ def resolve_special_codes():
     print(f"Recoded 99 -> NaN in: {cols}")
     return df_clean
     
-def remove_stage_III(df):
+def remove_unspecified_stage_III(df):
     """
     Removes rows with Stage III or IIINOS
     """    
@@ -54,30 +54,107 @@ def univariate_model(df, duration_col, event_col, covariate):
     return cph
 
 def preprocessing(df):
-    """Encode model covariates as numeric columns.
+    """Prepare baseline covariates for the primary Cox PH model.
 
-    Sex and chemotherapy are binary encoded, while the categorical ``Stage``
-    column is replaced with one-hot indicator columns.
+    Primary Cox PH covariates:
+        - Age
+        - Sex
+        - Stage (IIIA reference; IIIB and IIIC indicators)
+        - Marital status
+        - Race
+        - Regional nodes examined
+        - Year of diagnosis
+
+    Chemotherapy is intentionally excluded because it is a post-diagnosis
+    treatment variable rather than a baseline covariate.
     """
     df_processed = df.copy()
+    # ------------------------------------------------------------------
+    # Define primary Cox PH model columns
+    # ------------------------------------------------------------------
+    cox_cols = [
+        "Age",
+        "Sex",
+        "Stage",
+        "Marital status",
+        "Race",
+        "Regional nodes examined",
+        "Year of diagnosis",
+    ]
 
-    # Check that the expected values are present before mapping
-    assert df_processed["Sex"].isin(["Female", "Male"]).all(), "Unexpected value in Sex"
-    assert df_processed["Chemotherapy recode (yes, no/unk)"].isin(["No/Unknown", "Yes"]).all(), "Unexpected value in Chemo"
+    df_processed = df_processed[cox_cols].copy()
 
-    df_processed["Sex"] = df_processed["Sex"].map({"Female": 0, "Male": 1})
-    df_processed["Chemotherapy recode (yes, no/unk)"] = df_processed[
-        "Chemotherapy recode (yes, no/unk)"
-    ].map({"No/Unknown": 0, "Yes": 1})
+    # ------------------------------------------------------------------
+    # Sex: binary encoding
+    # ------------------------------------------------------------------
+    assert df_processed["Sex"].isin(["Female", "Male"]).all(), (
+        "Unexpected value in Sex"
+    )
+
+    df_processed["Sex"] = df_processed["Sex"].map(
+        {"Female": 0, "Male": 1}
+    )
+
+    # ------------------------------------------------------------------
+    # Stage: IIIA reference
+    # ------------------------------------------------------------------
+    expected_stage = {"IIIA", "IIIB", "IIIC"}
+
+    assert set(df_processed["Stage"].unique()).issubset(expected_stage), (
+        "Unexpected value in Stage"
+    )
 
     stage_dummies = pd.get_dummies(
-    df_processed["Stage"],
-    prefix="Stage",
-    dtype=int,
-    drop_first=True)   # drops IIIA if it's first alphabetically/first in category order
+        df_processed["Stage"],
+        prefix="Stage",
+        dtype=int,
+        drop_first=False,
+    )
+
+    # Explicitly retain IIIA as reference and create indicators
+    # for IIIB and IIIC.
+    stage_dummies = stage_dummies[
+        ["Stage_IIIB", "Stage_IIIC"]
+    ]
+
     df_processed = pd.concat(
-        [df_processed.drop(columns="Stage"), stage_dummies],
+        [
+            df_processed.drop(columns="Stage"),
+            stage_dummies,
+        ],
         axis=1,
+    )
+    # ------------------------------------------------------------------
+     # get dummies for marital status and race, dropping the first category to avoid multicollinearity
+    # ------------------------------------------------------------------
+    marital_dummies = pd.get_dummies(
+        df_processed["Marital status"],
+        prefix="Marital",
+        dtype=int,
+        drop_first=True,
+    )
+
+    df_processed = pd.concat(
+    [
+        df_processed.drop(columns="Marital status"),
+        marital_dummies,
+    ],
+    axis=1,
+    )
+
+    race_dummies = pd.get_dummies(
+        df_processed["Race"],
+        prefix="Race",
+        dtype=int,
+        drop_first=True,
+    )
+
+    df_processed = pd.concat(
+    [
+        df_processed.drop(columns="Race"),
+        race_dummies,
+    ],
+    axis=1,
     )
 
     return df_processed
@@ -103,7 +180,7 @@ def run_univariate_screen(df, duration_col, event_col, covariates):
 
 if __name__ == "__main__":
     df_clean = resolve_special_codes()
-    df_clean = remove_stage_III(df_clean)
+    df_clean = remove_unspecified_stage_III(df_clean)
     df_encoded = preprocessing(df_clean)
     print("***************")
     print(df_clean[["Stage"]].value_counts())
