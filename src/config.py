@@ -10,3 +10,13 @@ STAGE_THREE_SIZE = 14443 #verified with the cleaned dataset after filtering for 
 # Dynamically set project root path relative to this config file
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data"
+
+COX_COVARIATES = [
+    "Age recode with single ages and 90+",
+    "Sex",
+    "Stage",
+    "Marital status at diagnosis",
+    "Race recode (White, Black, Other)",
+    "Regional nodes examined (1988+)",
+    "Year of diagnosis",
+    ]

@@ -11,7 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 # Now Python can find 'src' regardless of execution context
-from src.config import PROJECT_ROOT, STAGE_THREE_CODES, STAGE_THREE_SIZE
+from src.config import PROJECT_ROOT, STAGE_THREE_CODES, STAGE_THREE_SIZE, COX_COVARIATES
 from  src.data.cleaning import get_clean_data
 
 def resolve_special_codes():
@@ -72,15 +72,8 @@ def preprocessing(df):
     # ------------------------------------------------------------------
     # Define primary Cox PH model columns
     # ------------------------------------------------------------------
-    cox_cols = [
-        "Age recode with single ages and 90+",
-        "Sex",
-        "Stage",
-        "Marital status at diagnosis",
-        "Race recode (White, Black, Other)",
-        "Regional nodes examined (1988+)",
-        "Year of diagnosis",
-    ]
+    cox_cols = COX_COVARIATES
+
 
     df_processed = df_processed[cox_cols].copy()
 
@@ -178,12 +171,35 @@ def run_univariate_screen(df, duration_col, event_col, covariates):
         results.append(summary)
     return pd.concat(results)
 
+def run_multivariable_model(df, duration_col, event_col):
+    """Fits a multivariable Cox PH model with the specified covariates."""
+
+    cph = CoxPHFitter()
+
+    df_processed = preprocessing(df)
+
+    run_df = pd.concat(
+        [
+            df[[duration_col, event_col]],
+            df_processed,
+        ],
+        axis=1,
+    ).dropna()
+
+    cph.fit(
+        run_df,
+        duration_col=duration_col,
+        event_col=event_col,
+    )
+
+    return cph
 if __name__ == "__main__":
     df_clean = resolve_special_codes()
     df_clean = remove_unspecified_stage_III(df_clean)
-    df_encoded = preprocessing(df_clean)
+    #f_encoded = preprocessing(df_clean)
     print("***************")
-    print(df_encoded.columns.tolist())
+    df_cph = run_multivariable_model(df_clean, duration_col='Time', event_col='Event')
+    print(df_cph.summary)
     
     """print(df_clean[["Stage"]].value_counts())
     result = run_univariate_screen(df_encoded, duration_col='Time', event_col='Event', covariates=[
