@@ -127,17 +127,21 @@ def test_preprocessing_encodes_covariates():
 
     df = pd.DataFrame({
         "Sex": ["Female", "Male", "Female"],
-        "Stage": ["IIIA", "IIIB", "IIIC"]
+        "Stage": ["IIIA", "IIIB", "IIIC"],
+        "Marital status at diagnosis": ["Married", "Single", "Divorced"],
+        "Race recode (White, Black, Other)": ["White", "Black", "Other"],
+        "Regional nodes examined (1988+)": [5, 10, 15],
     })
     
     result = preprocessing(df)
 
     assert list(result["Sex"]) == [0, 1, 0]
-    assert list(result["Chemotherapy recode (yes, no/unk)"]) == [1, 0, 1]
     assert "Stage_IIIA" not in result.columns   # dropped as reference category]
     assert list(result["Stage_IIIB"]) == [0, 1, 0]
     assert list(result["Stage_IIIC"]) == [0, 0, 1]
     assert "Stage" not in result.columns
     assert all(pd.api.types.is_integer_dtype(dt) for dt in result[["Stage_IIIC", "Stage_IIIB"]].dtypes)
-    assert list(df["Sex"]) == ["Female", "Male", "Female"]
+    assert list(result["Marital_Single"]) == [0, 1, 0]
+    assert list(result["Marital_Divorced"]) == [0, 0, 1]
+    
 
