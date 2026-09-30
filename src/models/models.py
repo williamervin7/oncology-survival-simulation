@@ -69,17 +69,13 @@ def preprocessing(df):
     treatment variable rather than a baseline covariate.
     """
     df_processed = df.copy()
-    # ------------------------------------------------------------------
     # Define primary Cox PH model columns
-    # ------------------------------------------------------------------
     cox_cols = COX_COVARIATES
 
 
     df_processed = df_processed[cox_cols].copy()
 
-    # ------------------------------------------------------------------
     # Sex: binary encoding
-    # ------------------------------------------------------------------
     assert df_processed["Sex"].isin(["Female", "Male"]).all(), (
         "Unexpected value in Sex"
     )
@@ -88,9 +84,7 @@ def preprocessing(df):
         {"Female": 0, "Male": 1}
     )
 
-    # ------------------------------------------------------------------
     # Stage: IIIA reference
-    # ------------------------------------------------------------------
     expected_stage = {"IIIA", "IIIB", "IIIC"}
 
     assert set(df_processed["Stage"].unique()).issubset(expected_stage), (
@@ -117,9 +111,7 @@ def preprocessing(df):
         ],
         axis=1,
     )
-    # ------------------------------------------------------------------
      # get dummies for marital status and race, dropping the first category to avoid multicollinearity
-    # ------------------------------------------------------------------
     marital_dummies = pd.get_dummies(
         df_processed["Marital status at diagnosis"],
         prefix="Marital",
@@ -196,20 +188,11 @@ def run_multivariable_model(df, duration_col, event_col):
 if __name__ == "__main__":
     df_clean = resolve_special_codes()
     df_clean = remove_unspecified_stage_III(df_clean)
-    #f_encoded = preprocessing(df_clean)
     print("***************")
     df_cph = run_multivariable_model(df_clean, duration_col='Time', event_col='Event')
-    print(df_cph.summary)
-    
-    """print(df_clean[["Stage"]].value_counts())
-    result = run_univariate_screen(df_encoded, duration_col='Time', event_col='Event', covariates=[
-        'Age recode with single ages and 90+',
-        'Sex',
-        'Chemotherapy recode (yes, no/unk)',
-        'Stage_IIIB',   # not 'Stage' — it no longer exists as one column
-        'Stage_IIIC',
-    ],)
-    print(result)"""
+    #print(df_cph.summary)
+    df_cph.print_summary()
+
 
 
     
