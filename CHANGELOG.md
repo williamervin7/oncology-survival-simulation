@@ -200,3 +200,14 @@
 8. Add statistical invariant tests for the Cox workflow once the expected model behavior and final specification are established.
 9. Produce a reproducible Phase 1 results artifact documenting cohort, N, events, censoring, covariates, reference categories, missing-data handling, Cox specification, PH diagnostics, remedies, and final model status.
 10. Freeze the Phase 1 Cox PH specification before beginning the RSF phase.
+
+### [0.9.0] — 2026-10-04
+
+* Reworked `phase_1.ipynb` to focus on model development and validation rather than duplicating exploratory data analysis already documented in the EDA notebook.
+* Updated categorical reference categories in the primary Cox PH preprocessing:
+
+  * Sex: Male
+  * Marital status: Single (never married)
+  * Race: Black
+* Continued development of the primary Cox proportional hazards modeling workflow, including model specification, categorical encoding, and validation/diagnostic structure.
+* Refined notebook organization and documentation to emphasize the reasoning behind modeling decisions and their role in the downstream survival simulation rather than repeating descriptive analyses from the EDA phase.
