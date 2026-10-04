@@ -134,7 +134,7 @@ def test_preprocessing_encodes_covariates():
     df = pd.DataFrame({
         "Sex": ["Female", "Male", "Female"],
         "Stage": ["IIIA", "IIIB", "IIIC"],
-        "Marital status at diagnosis": ["Married", "Single", "Divorced"],
+        "Marital status at diagnosis": ["Married", "Single (never married)", "Divorced"],
         "Race recode (White, Black, Other)": ["White", "Black", "Other"],
         "Regional nodes examined (1988+)": [5, 10, 15],
         "Age recode with single ages and 90+": [30, 40, 50],
