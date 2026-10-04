@@ -48,6 +48,15 @@ def remove_unspecified_stage_III(df):
     """    
     return df[~df["Stage"].isin(["III", "IIINOS"])]
 
+def preprocess_for_modeling():
+    """
+    Prepares the cleaned dataset for modeling by resolving special codes and
+    removing unspecified Stage III cases.
+    """
+    df_clean = resolve_special_codes()
+    df_clean = remove_unspecified_stage_III(df_clean)
+    return df_clean
+
 def univariate_model(df, duration_col, event_col, covariate):
     cph = CoxPHFitter()
     cph.fit(df[[duration_col, event_col, covariate]], duration_col=duration_col, event_col=event_col)
