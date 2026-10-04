@@ -67,10 +67,10 @@ def preprocessing(df):
 
     Primary Cox PH covariates:
         - Age
-        - Sex
+        - Sex (Female reference)
         - Stage (IIIA reference; IIIB and IIIC indicators)
-        - Marital status
-        - Race
+        - Marital status (Single [never married] reference)
+        - Race (Black reference)
         - Regional nodes examined
         - Year of diagnosis
 
@@ -78,17 +78,19 @@ def preprocessing(df):
     treatment variable rather than a baseline covariate.
     """
     df_processed = df.copy()
+
     # Define primary Cox PH model columns
     cox_cols = COX_COVARIATES
-
-
     df_processed = df_processed[cox_cols].copy()
 
-    # Sex: binary encoding
-    assert df_processed["Sex"].isin(["Female", "Male"]).all(), (
+    # Sex: Female reference
+    expected_sex = {"Female", "Male"}
+
+    assert df_processed["Sex"].isin(expected_sex).all(), (
         "Unexpected value in Sex"
     )
 
+    # Female = 0 (reference), Male = 1
     df_processed["Sex"] = df_processed["Sex"].map(
         {"Female": 0, "Male": 1}
     )
@@ -96,7 +98,7 @@ def preprocessing(df):
     # Stage: IIIA reference
     expected_stage = {"IIIA", "IIIB", "IIIC"}
 
-    assert set(df_processed["Stage"].unique()).issubset(expected_stage), (
+    assert df_processed["Stage"].isin(expected_stage).all(), (
         "Unexpected value in Stage"
     )
 
@@ -120,35 +122,61 @@ def preprocessing(df):
         ],
         axis=1,
     )
-     # get dummies for marital status and race, dropping the first category to avoid multicollinearity
+
+    # Marital status: Single (never married) reference
+    expected_marital = set(df_processed["Marital status at diagnosis"].unique())
+
+    assert "Single (never married)" in expected_marital, (
+        "Reference category 'Single (never married)' not found in Marital status"
+    )
+
     marital_dummies = pd.get_dummies(
         df_processed["Marital status at diagnosis"],
         prefix="Marital",
         dtype=int,
-        drop_first=True,
+        drop_first=False,
+    )
+
+    # Explicitly use Single (never married) as reference
+    marital_dummies = marital_dummies.drop(
+        columns="Marital_Single (never married)"
     )
 
     df_processed = pd.concat(
-    [
-        df_processed.drop(columns="Marital status at diagnosis"),
-        marital_dummies,
-    ],
-    axis=1,
+        [
+            df_processed.drop(columns="Marital status at diagnosis"),
+            marital_dummies,
+        ],
+        axis=1,
+    )
+
+    # Race: Black reference
+    expected_race = set(
+        df_processed["Race recode (White, Black, Other)"].unique()
+    )
+
+    assert "Black" in expected_race, (
+        "Reference category 'Black' not found in Race"
     )
 
     race_dummies = pd.get_dummies(
         df_processed["Race recode (White, Black, Other)"],
         prefix="Race",
         dtype=int,
-        drop_first=True,
+        drop_first=False,
+    )
+
+    # Explicitly use Black as reference
+    race_dummies = race_dummies.drop(
+        columns="Race_Black"
     )
 
     df_processed = pd.concat(
-    [
-        df_processed.drop(columns="Race recode (White, Black, Other)"),
-        race_dummies,
-    ],
-    axis=1,
+        [
+            df_processed.drop(columns="Race recode (White, Black, Other)"),
+            race_dummies,
+        ],
+        axis=1,
     )
 
     return df_processed
@@ -195,9 +223,7 @@ def run_multivariable_model(df, duration_col, event_col):
 
     return cph
 if __name__ == "__main__":
-    df_clean = resolve_special_codes()
-    df_clean = remove_unspecified_stage_III(df_clean)
-    print("***************")
+    df_clean = preprocess_for_modeling()
     df_cph = run_multivariable_model(df_clean, duration_col='Time', event_col='Event')
     #print(df_cph.summary)
     df_cph.print_summary()
