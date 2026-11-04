@@ -1,16 +1,13 @@
 name: oncology-survival-sim
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - python=3.11
-  - numpy
   - pandas
-  - scipy
   - scikit-learn
   - lifelines
-  - scikit-survival     
-  - pyyaml              
+  - scikit-survival
+  - pyyaml
   - matplotlib
   - seaborn
   - jupyterlab
@@ -20,3 +17,6 @@ dependencies:
   - black
   - ruff
   - pip
+  - pip:
+      - numpy==2.2.6
+      - scipy==1.17.1
