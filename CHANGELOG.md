@@ -203,11 +203,23 @@
 
 ### [0.9.0] — 2026-10-04
 
-* Reworked `phase_1.ipynb` to focus on model development and validation rather than duplicating exploratory data analysis already documented in the EDA notebook.
-* Updated categorical reference categories in the primary Cox PH preprocessing:
+- Reworked `phase_1.ipynb` to focus on model development and validation rather than duplicating exploratory data analysis already documented in the EDA notebook.
+- Updated categorical reference categories in the primary Cox PH preprocessing:
 
-  * Sex: Male
-  * Marital status: Single (never married)
-  * Race: Black
-* Continued development of the primary Cox proportional hazards modeling workflow, including model specification, categorical encoding, and validation/diagnostic structure.
-* Refined notebook organization and documentation to emphasize the reasoning behind modeling decisions and their role in the downstream survival simulation rather than repeating descriptive analyses from the EDA phase.
+  - Sex: Male
+  - Marital status: Single (never married)
+  - Race: Black
+- Continued development of the primary Cox proportional hazards modeling workflow, including model specification, categorical encoding, and validation/diagnostic structure.
+- Refined notebook organization and documentation to emphasize the reasoning behind modeling decisions and their role in the downstream survival simulation rather than repeating descriptive analyses from the EDA phase.
+
+### [0.10.0] — 2026-11-05
+
+- Continued development of `cox_model.ipynb`, establishing the primary multivariable Cox proportional hazards model and its diagnostic workflow.
+- Fit the primary Cox PH model using the selected baseline covariates and reviewed model coefficients, hazard ratios, confidence intervals, statistical significance, and overall model performance.
+- Evaluated the proportional hazards assumption using `CoxPHFitter.check_assumptions()` with a significance threshold of 0.05 and both Kaplan-Meier and rank time transformations.
+- Identified six predictors with statistically significant evidence of potential proportional hazards violations: Age, Regional nodes examined, Stage IIIB, Stage IIIC, Married, and Widowed.
+- Year of diagnosis was tested and not flagged
+- Calculated scaled Schoenfeld residuals and developed custom scatterplots with LOWESS smoothing to visually investigate the six flagged predictors after the built-in bootstrap plotting workflow proved computationally inefficient.
+- Compared statistical test results with visual diagnostics to distinguish potentially meaningful time-dependent effects from statistically significant but visually weak or ambiguous departures.
+- Identified Stage IIIB and Stage IIIC as the primary candidates for further investigation of time-dependent effects, with Stage IIIC showing the strongest visual indication.
+- Established the next diagnostic stage: evaluating the functional form of continuous predictors (Age, Regional nodes examined, and Year of diagnosis) before making potential model specification changes.
