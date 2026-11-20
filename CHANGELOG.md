@@ -223,3 +223,17 @@
 - Compared statistical test results with visual diagnostics to distinguish potentially meaningful time-dependent effects from statistically significant but visually weak or ambiguous departures.
 - Identified Stage IIIB and Stage IIIC as the primary candidates for further investigation of time-dependent effects, with Stage IIIC showing the strongest visual indication.
 - Established the next diagnostic stage: evaluating the functional form of continuous predictors (Age, Regional nodes examined, and Year of diagnosis) before making potential model specification changes.
+
+### [0.11.0] — 2026-11-20
+
+- Completed the Phase 1 Cox proportional hazards modeling and refinement workflow in `cox_model.ipynb`.
+- Evaluated the functional form of continuous predictors (Age, Regional nodes examined, and Year of diagnosis) using Martingale residuals, LOWESS visualizations, and natural cubic spline comparisons.
+- Identified evidence of nonlinear relationships for Age and Regional nodes examined, while retaining a linear specification for Year of diagnosis.
+- Developed and evaluated a piecewise Cox model using an analyst-selected 12-month cutpoint to investigate potential time-dependent effects for Stage IIIB and Stage IIIC.
+- Compared the piecewise model against the original Cox model using a likelihood-ratio test and partial AIC. The comparison did not support retaining the additional time-dependent Stage effects (LR = 1.03, df = 2, p = 0.596).
+- Developed a refined Cox model incorporating spline-based specifications for Age and Regional nodes examined while retaining the original baseline covariate structure.
+- Compared the primary linear and refined nonlinear models. The refined model achieved a higher apparent concordance index (0.728 vs. 0.720) and a lower partial AIC (112,191 vs. 112,506).
+- Conducted a preliminary joint likelihood-ratio comparison favoring the refined model (LR = 323.28, df = 4, p < 0.0001); verification of spline-basis nesting remains necessary before treating the comparison as definitive.
+- Exported primary and refined model coefficient tables as reproducible CSV artifacts in the `results/` directory.
+- Updated project documentation and the README to reflect the completed Phase 1 workflow, preliminary model findings, methodological limitations, and outstanding validation requirements.
+- Established the transition to Phase 2: implementing a Random Survival Forest model and evaluating differences in survival estimation, discrimination, and calibration.
